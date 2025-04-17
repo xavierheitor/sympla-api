@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 export const listarPerguntasAPR = async (req: Request, res: Response) => {
     try {
         const apr = {
-            id: "1",
+            id: 1,
             nome: "APR Padrão",
             descricao: "Análise Preliminar de Risco padrão para atividades",
             ativo: true,
@@ -124,38 +124,38 @@ export const listarAPRs = async (req: Request, res: Response) => {
     try {
         const aprs = [
             {
-                id: "1",
+                id: 1,
                 nome: "APR Inspeção Termográfica",
                 descricao: "Análise Preliminar de Risco para Inspeção Termográfica"
             },
             {
-                id: "2",
+                id: 2,
                 nome: "APR Manutenção Preventiva",
                 descricao: "Análise Preliminar de Risco para Manutenção Preventiva"
             },
             {
-                id: "3",
+                id: 3,
                 nome: "APR Inspeção Visual",
                 descricao: "Análise Preliminar de Risco para Inspeção Visual"
             },
             {
-                id: "4",
+                id: 4,
                 nome: "APR Teste de Operação",
                 descricao: "Análise Preliminar de Risco para Teste de Operação"
             },
             {
-                id: "5",
+                id: 5,
                 nome: "APR Inspeção Geral",
                 descricao: "Análise Preliminar de Risco para Inspeção Geral"
             },
             {
-                id: "6",
+                id: 6,
                 nome: "APR Manutenção Corretiva",
                 descricao: "Análise Preliminar de Risco para Manutenção Corretiva"
             }
         ];
 
-        res.json({ aprs });
+        res.json(aprs);
     } catch (error) {
         console.error('Erro ao listar APRs:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
