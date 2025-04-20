@@ -11,6 +11,8 @@ import subgruposRoutes from './routes/subgrupos.routes';
 import tiposAtividadeRoutes from './routes/tipos_atividade.routes';
 import perguntasRoutes from './routes/perguntas.routes';
 import tecnicosRoutes from './routes/tecnicos.routes';
+import checklistsRoutes from './routes/checklists.routes';
+import defeitosRoutes from './routes/defeitos.routes';
 import { verificarToken } from './middlewares/auth.middleware';
 
 const app = express();
@@ -35,6 +37,8 @@ app.use('/api/aprs', aprRoutes);
 app.use('/api/apr-perguntas', perguntasRoutes);
 app.use('/api/apr-atividades', aprAtividadeRoutes);
 app.use('/api/tecnicos', tecnicosRoutes);
+app.use('/api/checklists', checklistsRoutes);
+app.use('/api/defeitos', defeitosRoutes);
 
 const PORT = process.env.PORT || 3000;
 
