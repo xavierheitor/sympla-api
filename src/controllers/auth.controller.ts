@@ -1,11 +1,8 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'seu_jwt_secret_aqui';
-const TOKEN_EXPIRATION = '1d'; // 1 dia
 const REFRESH_TOKEN_EXPIRATION_DAYS = 7;
 
 export const registro = async (req: Request, res: Response) => {
@@ -16,10 +13,7 @@ export const registro = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Dados insuficientes para registro' });
         }
 
-        const usuarioExistente = await prisma.usuarioMobile.findUnique({
-            where: { matricula }
-        });
-
+        const usuarioExistente = await prisma.usuarioMobile.findUnique({ where: { matricula } });
         if (usuarioExistente) {
             return res.status(400).json({ message: 'Usuário já cadastrado com esta matrícula' });
         }
@@ -27,13 +21,7 @@ export const registro = async (req: Request, res: Response) => {
         const senhaHash = await bcrypt.hash(senha, 10);
 
         const usuario = await prisma.usuarioMobile.create({
-            data: {
-                matricula,
-                nome,
-                email,
-                senha: senhaHash,
-                funcao
-            }
+            data: { matricula, nome, email, senha: senhaHash, funcao }
         });
 
         res.status(201).json({
@@ -43,10 +31,9 @@ export const registro = async (req: Request, res: Response) => {
                 matricula: usuario.matricula,
                 nome: usuario.nome,
                 email: usuario.email,
-                funcao: usuario.funcao
+                funcao: usuario.funcao,
             }
         });
-
     } catch (error) {
         console.error('Erro ao registrar usuário:', error);
         res.status(500).json({ message: 'Erro ao registrar usuário' });
@@ -61,21 +48,17 @@ export const login = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Matrícula e senha são obrigatórios' });
         }
 
-        const usuario = await prisma.usuarioMobile.findUnique({
-            where: { matricula }
-        });
-
+        const usuario = await prisma.usuarioMobile.findUnique({ where: { matricula } });
         if (!usuario || !usuario.ativo) {
             return res.status(401).json({ message: 'Credenciais inválidas' });
         }
 
         const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
-
         if (!senhaCorreta) {
             return res.status(401).json({ message: 'Credenciais inválidas' });
         }
 
-        const token = jwt.sign({ userId: usuario.id }, JWT_SECRET, { expiresIn: TOKEN_EXPIRATION });
+        const token = uuidv4();
         const refreshToken = uuidv4();
 
         const tokenExpiration = new Date();
@@ -84,14 +67,21 @@ export const login = async (req: Request, res: Response) => {
         const refreshTokenExpiration = new Date();
         refreshTokenExpiration.setDate(refreshTokenExpiration.getDate() + REFRESH_TOKEN_EXPIRATION_DAYS);
 
+        // Revogar tokens antigos
+        await prisma.tokenMobile.updateMany({
+            where: { usuarioId: usuario.id },
+            data: { revoked: true },
+        });
+
         await prisma.tokenMobile.create({
             data: {
                 token,
                 refreshToken,
-                refreshTokenExpiresAt: refreshTokenExpiration,
                 usuarioId: usuario.id,
-                expiresAt: tokenExpiration
-            }
+                expiresAt: tokenExpiration,
+                refreshTokenExpiresAt: refreshTokenExpiration,
+                updatedAt: new Date(),
+            },
         });
 
         await prisma.sessaoMobile.create({
@@ -99,24 +89,23 @@ export const login = async (req: Request, res: Response) => {
                 usuarioId: usuario.id,
                 deviceInfo: deviceInfo || 'Unknown device',
                 expiresAt: refreshTokenExpiration,
-            }
+            },
         });
 
         res.json({
             message: 'Login realizado com sucesso',
+            token,
+            refreshToken,
+            expiresAt: tokenExpiration,
+            refreshTokenExpiresAt: refreshTokenExpiration,
             usuario: {
                 id: usuario.id,
                 matricula: usuario.matricula,
                 nome: usuario.nome,
                 funcao: usuario.funcao,
-                email: usuario.email
+                email: usuario.email,
             },
-            token,
-            refreshToken,
-            expiresAt: tokenExpiration,
-            refreshTokenExpiresAt: refreshTokenExpiration
         });
-
     } catch (error) {
         console.error('Erro ao fazer login:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
@@ -126,39 +115,22 @@ export const login = async (req: Request, res: Response) => {
 export const logout = async (req: Request, res: Response) => {
     try {
         const authHeader = req.headers.authorization;
-
-        if (!authHeader) {
-            return res.status(401).json({ message: 'Token não fornecido' });
-        }
+        if (!authHeader) return res.status(401).json({ message: 'Token não fornecido' });
 
         const [bearer, token] = authHeader.split(' ');
-
-        if (bearer !== 'Bearer' || !token) {
-            return res.status(401).json({ message: 'Formato de token inválido' });
-        }
+        if (bearer !== 'Bearer' || !token) return res.status(401).json({ message: 'Formato de token inválido' });
 
         await prisma.tokenMobile.updateMany({
-            where: {
-                token,
-                usuarioId: req.usuario?.id
-            },
-            data: {
-                revoked: true
-            }
+            where: { token, usuarioId: req.usuario?.id },
+            data: { revoked: true },
         });
 
         await prisma.sessaoMobile.updateMany({
-            where: {
-                usuarioId: req.usuario?.id,
-                ativa: true
-            },
-            data: {
-                ativa: false
-            }
+            where: { usuarioId: req.usuario?.id, ativa: true },
+            data: { ativa: false },
         });
 
         res.json({ message: 'Logout realizado com sucesso' });
-
     } catch (error) {
         console.error('Erro ao fazer logout:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
@@ -168,41 +140,27 @@ export const logout = async (req: Request, res: Response) => {
 export const refreshToken = async (req: Request, res: Response) => {
     try {
         const { refreshToken } = req.body;
-
-        if (!refreshToken) {
-            return res.status(400).json({ message: 'Refresh token não fornecido' });
-        }
+        if (!refreshToken) return res.status(400).json({ message: 'Refresh token não fornecido' });
 
         const tokenInfo = await prisma.tokenMobile.findFirst({
             where: {
                 refreshToken,
                 revoked: false,
-                refreshTokenExpiresAt: {
-                    gt: new Date()
-                }
+                refreshTokenExpiresAt: { gt: new Date() },
             },
-            include: {
-                usuario: true
-            }
         });
 
         if (!tokenInfo) {
             return res.status(401).json({ message: 'Refresh token inválido ou expirado' });
         }
 
-        await prisma.tokenMobile.update({
-            where: {
-                id: tokenInfo.id
-            },
-            data: {
-                revoked: true
-            }
+        // Revogar tokens antigos
+        await prisma.tokenMobile.updateMany({
+            where: { usuarioId: tokenInfo.usuarioId },
+            data: { revoked: true },
         });
 
-        const newToken = jwt.sign({ userId: tokenInfo.usuario.id }, JWT_SECRET, {
-            expiresIn: TOKEN_EXPIRATION
-        });
-
+        const newToken = uuidv4();
         const newRefreshToken = uuidv4();
 
         const tokenExpiration = new Date();
@@ -215,11 +173,20 @@ export const refreshToken = async (req: Request, res: Response) => {
             data: {
                 token: newToken,
                 refreshToken: newRefreshToken,
+                usuarioId: tokenInfo.usuarioId,
+                expiresAt: tokenExpiration,
                 refreshTokenExpiresAt: refreshTokenExpiration,
-                usuarioId: tokenInfo.usuario.id,
-                expiresAt: tokenExpiration
-            }
+                updatedAt: new Date(),
+            },
         });
+
+        const usuario = await prisma.usuarioMobile.findUnique({
+            where: { id: tokenInfo.usuarioId },
+        });
+
+        if (!usuario) {
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
 
         res.json({
             message: 'Token renovado com sucesso',
@@ -228,14 +195,10 @@ export const refreshToken = async (req: Request, res: Response) => {
             expiresAt: tokenExpiration,
             refreshTokenExpiresAt: refreshTokenExpiration,
             usuario: {
-                id: tokenInfo.usuario.id,
-                matricula: tokenInfo.usuario.matricula,
-                nome: tokenInfo.usuario.nome,
-                funcao: tokenInfo.usuario.funcao,
-                email: tokenInfo.usuario.email
-            }
+                nome: usuario.nome,
+                matricula: usuario.matricula,
+            },
         });
-
     } catch (error) {
         console.error('Erro ao renovar token:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });

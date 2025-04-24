@@ -311,41 +311,23 @@ model VerificationToken {
 }
 
 model UsuarioMobile {
-  id         Int               @id @default(autoincrement())
-  matricula  String            @unique @db.VarChar(50)
-  nome       String            @db.VarChar(255)
-  email      String?           @unique @db.VarChar(255)
-  senha      String            @db.VarChar(255)
-  funcao     String            @db.VarChar(100)
-  ativo      Boolean           @default(true)
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
-  deletedAt  DateTime?
-  anomalias  AnomaliaMobile[]
-  atividades AtividadeMobile[]
-  sessoes    SessaoMobile[]
-  tokens     TokenMobile[]
+  id          Int               @id @default(autoincrement())
+  matricula   String            @unique @db.VarChar(50)
+  nome        String            @db.VarChar(255)
+  email       String?           @unique @db.VarChar(255)
+  senha       String            @db.VarChar(255)
+  funcao      String            @db.VarChar(100)
+  ativo       Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deletedAt   DateTime?
+  TokenMobile TokenMobile[]
+  anomalias   AnomaliaMobile[]
+  atividades  AtividadeMobile[]
+  sessoes     SessaoMobile[]
 
   @@index([matricula])
   @@map("usuarios_mobile")
-}
-
-model TokenMobile {
-  id                    Int           @id @default(autoincrement())
-  token                 String        @unique @db.VarChar(255)
-  refreshToken          String?       @unique @db.VarChar(255)
-  usuarioId             Int
-  expiresAt             DateTime
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
-  revoked               Boolean       @default(false)
-  refreshTokenExpiresAt DateTime?
-  usuario               UsuarioMobile @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-
-  @@index([token])
-  @@index([refreshToken])
-  @@index([usuarioId])
-  @@map("tokens_mobile")
 }
 
 model SessaoMobile {
@@ -440,6 +422,21 @@ model AnomaliaMobile {
 
   @@index([usuarioId])
   @@map("anomalias_mobile")
+}
+
+model TokenMobile {
+  id                    Int           @id @default(autoincrement())
+  token                 String        @unique @db.VarChar(255)
+  refreshToken          String?       @unique @db.VarChar(255)
+  refreshTokenExpiresAt DateTime?
+  usuarioId             Int
+  expiresAt             DateTime
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime
+  revoked               Boolean       @default(false)
+  usuarios_mobile       UsuarioMobile @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId], map: "TokenMobile_usuarioId_fkey")
 }
 
 enum PropriedadeSubestacao {
