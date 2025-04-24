@@ -168,9 +168,9 @@ model GrupoDeDefeitosEquipamento {
   createdBy         Int
   updatedBy         Int?
   deletedBy         Int?
+  Defeitos          Defeitos[]
   grupoDeDefeitos   GrupoDeDefeitos    @relation(fields: [grupoDeDefeitosId], references: [id], onDelete: Cascade)
   SubGrupoDefeitos  SubGrupoDefeitos[]
-  Defeitos          Defeitos[]
 
   @@unique([grupoDeDefeitosId, equipamento])
   @@index([grupoDeDefeitosId])
@@ -179,19 +179,17 @@ model GrupoDeDefeitosEquipamento {
 }
 
 model SubGrupoDefeitos {
-  id   Int    @id @default(autoincrement())
-  nome String @db.VarChar(255)
-
+  id                        Int                        @id @default(autoincrement())
+  nome                      String                     @db.VarChar(255)
   grupoDefeitoEquipamentoId Int
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
+  deletedAt                 DateTime?
+  createdBy                 Int
+  updatedBy                 Int?
+  deletedBy                 Int?
+  Defeitos                  Defeitos[]
   grupoDefeitoEquipamento   GrupoDeDefeitosEquipamento @relation(fields: [grupoDefeitoEquipamentoId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  deletedAt DateTime?
-  createdBy Int
-  updatedBy Int?
-  deletedBy Int?
-  Defeitos  Defeitos[]
 
   @@unique([nome, grupoDefeitoEquipamentoId])
   @@index([grupoDefeitoEquipamentoId])
@@ -199,55 +197,50 @@ model SubGrupoDefeitos {
 }
 
 model Defeitos {
-  id         Int               @id @default(autoincrement())
-  nome       String            @db.VarChar(255)
-  descricao  String            @db.Text
-  codigoSAP  String            @unique @db.VarChar(50)
-  prioridade PrioridadeDefeito
-
-  subGrupoDefeitosId Int
-  subGrupoDefeitos   SubGrupoDefeitos @relation(fields: [subGrupoDefeitosId], references: [id], onDelete: Cascade)
-
+  id                         Int                        @id @default(autoincrement())
+  nome                       String                     @db.VarChar(255)
+  descricao                  String                     @db.Text
+  prioridade                 PrioridadeDefeito
+  subGrupoDefeitosId         Int
+  createdAt                  DateTime                   @default(now())
+  updatedAt                  DateTime                   @updatedAt
+  deletedAt                  DateTime?
+  createdBy                  Int
+  deletedBy                  Int?
+  updatedBy                  Int?
+  codigoSAP                  String                     @unique @db.VarChar(50)
   grupoDefeitosEquipamentoId Int
+  Anomalias                  Anomalias[]
   grupoDefeitosEquipamento   GrupoDeDefeitosEquipamento @relation(fields: [grupoDefeitosEquipamentoId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  deletedAt DateTime?
-  createdBy Int
-  updatedBy Int?
-  deletedBy Int?
-  Anomalias Anomalias[]
+  subGrupoDefeitos           SubGrupoDefeitos           @relation(fields: [subGrupoDefeitosId], references: [id], onDelete: Cascade)
 
   @@index([subGrupoDefeitosId])
   @@index([nome])
+  @@index([grupoDefeitosEquipamentoId], map: "defeitos_grupoDefeitosEquipamentoId_fkey")
   @@map("defeitos")
 }
 
 model NotaPlanoManutencao {
-  id               Int        @id @default(autoincrement())
-  nome             String     @db.VarChar(255)
-  numeroSAP        String     @unique @db.VarChar(50)
-  status           StatusNota @default(PENDENTE)
-  tipoNota         TipoNota
-  subestacaoId     Int
-  equipamentoId    Int
-  tipoManutencaoId Int
-  kpiId            Int
-
+  id                 Int            @id @default(autoincrement())
+  nome               String         @db.VarChar(255)
+  numeroSAP          String         @unique @db.VarChar(50)
+  status             StatusNota     @default(PENDENTE)
+  tipoNota           TipoNota
+  subestacaoId       Int
+  equipamentoId      Int
+  tipoManutencaoId   Int
+  kpiId              Int
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  deletedAt          DateTime?
+  createdBy          Int
+  updatedBy          Int?
+  deletedBy          Int?
   dataLimiteExecucao DateTime
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  createdBy Int
-  updatedBy Int?
-  deletedBy Int?
-
-  equipamento    Equipamentos   @relation(fields: [equipamentoId], references: [id], onDelete: Cascade)
-  kpi            Kpi            @relation(fields: [kpiId], references: [id], onDelete: Cascade)
-  subestacao     Subestacoes    @relation(fields: [subestacaoId], references: [id], onDelete: Cascade)
-  tipoManutencao TipoManutencao @relation(fields: [tipoManutencaoId], references: [id], onDelete: Cascade)
+  equipamento        Equipamentos   @relation(fields: [equipamentoId], references: [id], onDelete: Cascade)
+  kpi                Kpi            @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+  subestacao         Subestacoes    @relation(fields: [subestacaoId], references: [id], onDelete: Cascade)
+  tipoManutencao     TipoManutencao @relation(fields: [tipoManutencaoId], references: [id], onDelete: Cascade)
 
   @@index([subestacaoId])
   @@index([equipamentoId])
@@ -317,6 +310,138 @@ model VerificationToken {
   @@map("tokens_verificacao")
 }
 
+model UsuarioMobile {
+  id         Int               @id @default(autoincrement())
+  matricula  String            @unique @db.VarChar(50)
+  nome       String            @db.VarChar(255)
+  email      String?           @unique @db.VarChar(255)
+  senha      String            @db.VarChar(255)
+  funcao     String            @db.VarChar(100)
+  ativo      Boolean           @default(true)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  deletedAt  DateTime?
+  anomalias  AnomaliaMobile[]
+  atividades AtividadeMobile[]
+  sessoes    SessaoMobile[]
+  tokens     TokenMobile[]
+
+  @@index([matricula])
+  @@map("usuarios_mobile")
+}
+
+model TokenMobile {
+  id                    Int           @id @default(autoincrement())
+  token                 String        @unique @db.VarChar(255)
+  refreshToken          String?       @unique @db.VarChar(255)
+  usuarioId             Int
+  expiresAt             DateTime
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  revoked               Boolean       @default(false)
+  refreshTokenExpiresAt DateTime?
+  usuario               UsuarioMobile @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([refreshToken])
+  @@index([usuarioId])
+  @@map("tokens_mobile")
+}
+
+model SessaoMobile {
+  id         Int           @id @default(autoincrement())
+  usuarioId  Int
+  deviceInfo String?       @db.Text
+  lastActive DateTime      @default(now())
+  createdAt  DateTime      @default(now())
+  expiresAt  DateTime
+  ativa      Boolean       @default(true)
+  usuario    UsuarioMobile @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("sessoes_mobile")
+}
+
+model AtividadeMobile {
+  id           Int                   @id @default(autoincrement())
+  titulo       String                @db.VarChar(255)
+  descricao    String                @db.Text
+  dataInicio   DateTime
+  dataFim      DateTime
+  status       StatusAtividadeMobile @default(PENDENTE)
+  progresso    Float                 @default(0)
+  observacao   String?               @db.Text
+  subestacao   String                @db.VarChar(255)
+  equipamento  String                @db.VarChar(255)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  usuarioId    Int?
+  assinaturas  AssinaturaMobile[]
+  usuario      UsuarioMobile?        @relation(fields: [usuarioId], references: [id])
+  respostasAPR RespostaAPRMobile[]
+
+  @@index([status])
+  @@index([usuarioId])
+  @@map("atividades_mobile")
+}
+
+model RespostaAPRMobile {
+  id          Int             @id @default(autoincrement())
+  pergunta    String          @db.Text
+  resposta    String          @db.VarChar(50)
+  atividadeId Int
+  createdAt   DateTime        @default(now())
+  atividade   AtividadeMobile @relation(fields: [atividadeId], references: [id], onDelete: Cascade)
+
+  @@index([atividadeId])
+  @@map("respostas_apr_mobile")
+}
+
+model AssinaturaMobile {
+  id          Int             @id @default(autoincrement())
+  nome        String          @db.VarChar(255)
+  cargo       String          @db.VarChar(100)
+  data        DateTime        @default(now())
+  imagemUrl   String          @db.Text
+  atividadeId Int
+  createdAt   DateTime        @default(now())
+  atividade   AtividadeMobile @relation(fields: [atividadeId], references: [id], onDelete: Cascade)
+
+  @@index([atividadeId])
+  @@map("assinaturas_mobile")
+}
+
+model AnomaliaMobile {
+  id               Int            @id @default(autoincrement())
+  regional         String         @db.VarChar(255)
+  subestacao       String         @db.VarChar(255)
+  sigla            String         @db.VarChar(10)
+  tipoInspecao     String         @db.VarChar(100)
+  ordemInspecao    String         @db.VarChar(50)
+  nota             String?        @db.VarChar(100)
+  si               String?        @db.VarChar(50)
+  tecnicos         String         @db.Text
+  item             Int
+  data             DateTime
+  tipo             String         @db.VarChar(100)
+  grupoDefeito     String?        @db.VarChar(100)
+  subgrupo         String?        @db.VarChar(100)
+  descricaoDefeito String         @db.Text
+  codigoDefeito    String?        @db.VarChar(50)
+  prioridade       String?        @db.VarChar(5)
+  fase             String?        @db.VarChar(5)
+  ladoFonteCarga   String?        @db.VarChar(20)
+  deltaTemperatura Float?
+  observacoes      String?        @db.Text
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  usuarioId        Int?
+  usuario          UsuarioMobile? @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+  @@map("anomalias_mobile")
+}
+
 enum PropriedadeSubestacao {
   PROPRIA
   COMPARTILHADA
@@ -372,140 +497,6 @@ enum StatusNota {
   PROGRAMADO
   EXECUTADO
   BAIXADO_NO_SAP
-}
-
-// Modelos para autenticação mobile
-model UsuarioMobile {
-  id         Int               @id @default(autoincrement())
-  matricula  String            @unique @db.VarChar(50)
-  nome       String            @db.VarChar(255)
-  email      String?           @unique @db.VarChar(255)
-  senha      String            @db.VarChar(255)
-  funcao     String            @db.VarChar(100)
-  ativo      Boolean           @default(true)
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
-  deletedAt  DateTime?
-  tokens     TokenMobile[]
-  sessoes    SessaoMobile[]
-  atividades AtividadeMobile[]
-  anomalias  AnomaliaMobile[]
-
-  @@index([matricula])
-  @@map("usuarios_mobile")
-}
-
-model TokenMobile {
-  id           Int           @id @default(autoincrement())
-  token        String        @unique @db.VarChar(255)
-  refreshToken String?       @unique @db.VarChar(255)
-  usuarioId    Int
-  expiresAt    DateTime
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  revoked      Boolean       @default(false)
-  usuario      UsuarioMobile @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-
-  @@index([token])
-  @@index([refreshToken])
-  @@index([usuarioId])
-  @@map("tokens_mobile")
-}
-
-model SessaoMobile {
-  id         Int           @id @default(autoincrement())
-  usuarioId  Int
-  deviceInfo String?       @db.Text
-  lastActive DateTime      @default(now())
-  createdAt  DateTime      @default(now())
-  expiresAt  DateTime
-  ativa      Boolean       @default(true)
-  usuario    UsuarioMobile @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-
-  @@index([usuarioId])
-  @@map("sessoes_mobile")
-}
-
-// Modelos para dados do app mobile
-model AtividadeMobile {
-  id          Int                   @id @default(autoincrement())
-  titulo      String                @db.VarChar(255)
-  descricao   String                @db.Text
-  dataInicio  DateTime
-  dataFim     DateTime
-  status      StatusAtividadeMobile @default(PENDENTE)
-  progresso   Float                 @default(0)
-  observacao  String?               @db.Text
-  subestacao  String                @db.VarChar(255)
-  equipamento String                @db.VarChar(255)
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
-  usuarioId   Int?
-  usuario     UsuarioMobile?        @relation(fields: [usuarioId], references: [id])
-
-  respostasAPR RespostaAPRMobile[]
-  assinaturas  AssinaturaMobile[]
-
-  @@index([status])
-  @@index([usuarioId])
-  @@map("atividades_mobile")
-}
-
-model RespostaAPRMobile {
-  id          Int             @id @default(autoincrement())
-  pergunta    String          @db.Text
-  resposta    String          @db.VarChar(50)
-  atividadeId Int
-  atividade   AtividadeMobile @relation(fields: [atividadeId], references: [id], onDelete: Cascade)
-  createdAt   DateTime        @default(now())
-
-  @@index([atividadeId])
-  @@map("respostas_apr_mobile")
-}
-
-model AssinaturaMobile {
-  id          Int             @id @default(autoincrement())
-  nome        String          @db.VarChar(255)
-  cargo       String          @db.VarChar(100)
-  data        DateTime        @default(now())
-  imagemUrl   String          @db.Text
-  atividadeId Int
-  atividade   AtividadeMobile @relation(fields: [atividadeId], references: [id], onDelete: Cascade)
-  createdAt   DateTime        @default(now())
-
-  @@index([atividadeId])
-  @@map("assinaturas_mobile")
-}
-
-model AnomaliaMobile {
-  id               Int            @id @default(autoincrement())
-  regional         String         @db.VarChar(255)
-  subestacao       String         @db.VarChar(255)
-  sigla            String         @db.VarChar(10)
-  tipoInspecao     String         @db.VarChar(100)
-  ordemInspecao    String         @db.VarChar(50)
-  nota             String?        @db.VarChar(100)
-  si               String?        @db.VarChar(50)
-  tecnicos         String         @db.Text
-  item             Int
-  data             DateTime
-  tipo             String         @db.VarChar(100)
-  grupoDefeito     String?        @db.VarChar(100)
-  subgrupo         String?        @db.VarChar(100)
-  descricaoDefeito String         @db.Text
-  codigoDefeito    String?        @db.VarChar(50)
-  prioridade       String?        @db.VarChar(5)
-  fase             String?        @db.VarChar(5)
-  ladoFonteCarga   String?        @db.VarChar(20)
-  deltaTemperatura Float?
-  observacoes      String?        @db.Text
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  usuarioId        Int?
-  usuario          UsuarioMobile? @relation(fields: [usuarioId], references: [id])
-
-  @@index([usuarioId])
-  @@map("anomalias_mobile")
 }
 
 enum StatusAtividadeMobile {

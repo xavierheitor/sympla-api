@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu_jwt_secret_aqui';
 const TOKEN_EXPIRATION = '1d'; // 1 dia
-const REFRESH_TOKEN_EXPIRATION = '7d'; // 7 dias
+const REFRESH_TOKEN_EXPIRATION_DAYS = 7;
 
 export const registro = async (req: Request, res: Response) => {
     try {
@@ -16,7 +16,6 @@ export const registro = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Dados insuficientes para registro' });
         }
 
-        // Verificar se o usuário já existe
         const usuarioExistente = await prisma.usuarioMobile.findUnique({
             where: { matricula }
         });
@@ -25,10 +24,8 @@ export const registro = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Usuário já cadastrado com esta matrícula' });
         }
 
-        // Hash da senha
         const senhaHash = await bcrypt.hash(senha, 10);
 
-        // Criar usuário
         const usuario = await prisma.usuarioMobile.create({
             data: {
                 matricula,
@@ -85,12 +82,13 @@ export const login = async (req: Request, res: Response) => {
         tokenExpiration.setDate(tokenExpiration.getDate() + 1);
 
         const refreshTokenExpiration = new Date();
-        refreshTokenExpiration.setDate(refreshTokenExpiration.getDate() + 7);
+        refreshTokenExpiration.setDate(refreshTokenExpiration.getDate() + REFRESH_TOKEN_EXPIRATION_DAYS);
 
         await prisma.tokenMobile.create({
             data: {
                 token,
                 refreshToken,
+                refreshTokenExpiresAt: refreshTokenExpiration,
                 usuarioId: usuario.id,
                 expiresAt: tokenExpiration
             }
@@ -110,11 +108,13 @@ export const login = async (req: Request, res: Response) => {
                 id: usuario.id,
                 matricula: usuario.matricula,
                 nome: usuario.nome,
-                funcao: usuario.funcao
+                funcao: usuario.funcao,
+                email: usuario.email
             },
             token,
             refreshToken,
-            expiresAt: tokenExpiration
+            expiresAt: tokenExpiration,
+            refreshTokenExpiresAt: refreshTokenExpiration
         });
 
     } catch (error) {
@@ -177,7 +177,7 @@ export const refreshToken = async (req: Request, res: Response) => {
             where: {
                 refreshToken,
                 revoked: false,
-                expiresAt: {
+                refreshTokenExpiresAt: {
                     gt: new Date()
                 }
             },
@@ -199,16 +199,23 @@ export const refreshToken = async (req: Request, res: Response) => {
             }
         });
 
-        const newToken = jwt.sign({ userId: tokenInfo.usuario.id }, JWT_SECRET, { expiresIn: TOKEN_EXPIRATION });
+        const newToken = jwt.sign({ userId: tokenInfo.usuario.id }, JWT_SECRET, {
+            expiresIn: TOKEN_EXPIRATION
+        });
+
         const newRefreshToken = uuidv4();
 
         const tokenExpiration = new Date();
         tokenExpiration.setDate(tokenExpiration.getDate() + 1);
 
+        const refreshTokenExpiration = new Date();
+        refreshTokenExpiration.setDate(refreshTokenExpiration.getDate() + REFRESH_TOKEN_EXPIRATION_DAYS);
+
         await prisma.tokenMobile.create({
             data: {
                 token: newToken,
                 refreshToken: newRefreshToken,
+                refreshTokenExpiresAt: refreshTokenExpiration,
                 usuarioId: tokenInfo.usuario.id,
                 expiresAt: tokenExpiration
             }
@@ -219,6 +226,7 @@ export const refreshToken = async (req: Request, res: Response) => {
             token: newToken,
             refreshToken: newRefreshToken,
             expiresAt: tokenExpiration,
+            refreshTokenExpiresAt: refreshTokenExpiration,
             usuario: {
                 id: tokenInfo.usuario.id,
                 matricula: tokenInfo.usuario.matricula,
@@ -233,4 +241,3 @@ export const refreshToken = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
-
