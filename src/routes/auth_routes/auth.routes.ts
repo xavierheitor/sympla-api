@@ -6,7 +6,7 @@ const router = Router();
 
 // Rotas públicas
 router.post('/login', login);
-router.post('/refresh-token', refreshToken);
+router.post('/refresh', refreshToken);
 router.post('/registro', registro);
 
 // Rota protegida

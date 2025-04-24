@@ -218,11 +218,19 @@ export const refreshToken = async (req: Request, res: Response) => {
             message: 'Token renovado com sucesso',
             token: newToken,
             refreshToken: newRefreshToken,
-            expiresAt: tokenExpiration
+            expiresAt: tokenExpiration,
+            usuario: {
+                id: tokenInfo.usuario.id,
+                matricula: tokenInfo.usuario.matricula,
+                nome: tokenInfo.usuario.nome,
+                funcao: tokenInfo.usuario.funcao,
+                email: tokenInfo.usuario.email
+            }
         });
 
     } catch (error) {
         console.error('Erro ao renovar token:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
-}; 
+};
+
