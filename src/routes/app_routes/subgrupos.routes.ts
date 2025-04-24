@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listarSubgrupos } from '../controllers/subgrupos.controller';
+import { listarSubgrupos } from '../../controllers/subgrupos.controller';
 
 const router = Router();
 

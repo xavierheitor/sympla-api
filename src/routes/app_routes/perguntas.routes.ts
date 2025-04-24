@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listarPerguntas } from '../controllers/perguntas.controller';
+import { listarPerguntas } from '../../controllers/checklists.controller';
 
 const router = Router();
 

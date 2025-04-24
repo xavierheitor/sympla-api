@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listarTecnicos } from '../controllers/tecnicos.controller';
+import { listarTecnicos } from '../../controllers/tecnicos.controller';
 
 const router = Router();
 

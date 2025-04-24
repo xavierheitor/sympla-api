@@ -4,7 +4,7 @@ import {
     listarGruposPerguntas,
     listarPerguntas,
     listarChecklistAtividades
-} from '../controllers/checklists.controller';
+} from '../../controllers/checklists.controller';
 
 const router = Router();
 

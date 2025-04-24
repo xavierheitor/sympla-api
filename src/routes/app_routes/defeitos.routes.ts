@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listarDefeitos } from '../controllers/defeitos.controller';
+import { listarDefeitos } from '../../controllers/defeitos.controller';
 
 const router = Router();
 

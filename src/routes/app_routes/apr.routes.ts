@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listarAPRs } from '../controllers/apr.controller';
+import { listarAPRs } from '../../controllers/apr.controller';
 
 const router = Router();
 
