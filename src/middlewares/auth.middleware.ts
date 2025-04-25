@@ -39,7 +39,7 @@ export const verificarToken = async (req: Request, res: Response, next: NextFunc
                 }
             },
             include: {
-                usuario: true
+                usuarios_mobile: true
             }
         });
 
@@ -60,9 +60,9 @@ export const verificarToken = async (req: Request, res: Response, next: NextFunc
 
         // Adicionar usuário ao request
         req.usuario = {
-            id: tokenInfo.usuario.id,
-            matricula: tokenInfo.usuario.matricula,
-            nome: tokenInfo.usuario.nome
+            id: tokenInfo.usuarios_mobile.id,
+            matricula: tokenInfo.usuarios_mobile.matricula,
+            nome: tokenInfo.usuarios_mobile.nome
         };
 
         next();

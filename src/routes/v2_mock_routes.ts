@@ -11,8 +11,8 @@ const v2Routes = Router();
 
 v2Routes.get('/tipo-atividade', TipoAtividadeController.getTiposAtividade);
 v2Routes.get('/atividade', AtividadeController.getAtividades);
-v2Routes.get('/equipamento', EquipamentoController.getEquipamentos);
-v2Routes.get('/grupo-defeito', GrupoDefeitoController.getGruposDefeito);
-v2Routes.get('/subgrupo-defeito', SubgrupoDefeitoController.getSubgruposDefeito);
+v2Routes.get('/equipamentos', EquipamentoController.getEquipamentos);
+v2Routes.get('/grupos-defeito', GrupoDefeitoController.getGruposDefeito);
+v2Routes.get('/subgrupos-defeito', SubgrupoDefeitoController.getSubgruposDefeito);
 
 export default v2Routes;

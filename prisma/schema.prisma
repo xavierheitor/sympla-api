@@ -432,7 +432,7 @@ model TokenMobile {
   usuarioId             Int
   expiresAt             DateTime
   createdAt             DateTime      @default(now())
-  updatedAt             DateTime
+  updatedAt             DateTime      @updatedAt
   revoked               Boolean       @default(false)
   usuarios_mobile       UsuarioMobile @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 

@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'seu_jwt_secret_aqui';
+const TOKEN_EXPIRATION = '1d';
 const REFRESH_TOKEN_EXPIRATION_DAYS = 7;
 
 export const registro = async (req: Request, res: Response) => {
@@ -31,7 +34,7 @@ export const registro = async (req: Request, res: Response) => {
                 matricula: usuario.matricula,
                 nome: usuario.nome,
                 email: usuario.email,
-                funcao: usuario.funcao,
+                funcao: usuario.funcao
             }
         });
     } catch (error) {
@@ -49,6 +52,7 @@ export const login = async (req: Request, res: Response) => {
         }
 
         const usuario = await prisma.usuarioMobile.findUnique({ where: { matricula } });
+
         if (!usuario || !usuario.ativo) {
             return res.status(401).json({ message: 'Credenciais inválidas' });
         }
@@ -67,12 +71,6 @@ export const login = async (req: Request, res: Response) => {
         const refreshTokenExpiration = new Date();
         refreshTokenExpiration.setDate(refreshTokenExpiration.getDate() + REFRESH_TOKEN_EXPIRATION_DAYS);
 
-        // Revogar tokens antigos
-        await prisma.tokenMobile.updateMany({
-            where: { usuarioId: usuario.id },
-            data: { revoked: true },
-        });
-
         await prisma.tokenMobile.create({
             data: {
                 token,
@@ -80,8 +78,7 @@ export const login = async (req: Request, res: Response) => {
                 usuarioId: usuario.id,
                 expiresAt: tokenExpiration,
                 refreshTokenExpiresAt: refreshTokenExpiration,
-                updatedAt: new Date(),
-            },
+            }
         });
 
         await prisma.sessaoMobile.create({
@@ -89,7 +86,7 @@ export const login = async (req: Request, res: Response) => {
                 usuarioId: usuario.id,
                 deviceInfo: deviceInfo || 'Unknown device',
                 expiresAt: refreshTokenExpiration,
-            },
+            }
         });
 
         res.json({
@@ -100,11 +97,9 @@ export const login = async (req: Request, res: Response) => {
             refreshTokenExpiresAt: refreshTokenExpiration,
             usuario: {
                 id: usuario.id,
-                matricula: usuario.matricula,
                 nome: usuario.nome,
-                funcao: usuario.funcao,
-                email: usuario.email,
-            },
+                matricula: usuario.matricula,
+            }
         });
     } catch (error) {
         console.error('Erro ao fazer login:', error);
@@ -121,13 +116,8 @@ export const logout = async (req: Request, res: Response) => {
         if (bearer !== 'Bearer' || !token) return res.status(401).json({ message: 'Formato de token inválido' });
 
         await prisma.tokenMobile.updateMany({
-            where: { token, usuarioId: req.usuario?.id },
+            where: { token },
             data: { revoked: true },
-        });
-
-        await prisma.sessaoMobile.updateMany({
-            where: { usuarioId: req.usuario?.id, ativa: true },
-            data: { ativa: false },
         });
 
         res.json({ message: 'Logout realizado com sucesso' });
@@ -146,17 +136,19 @@ export const refreshToken = async (req: Request, res: Response) => {
             where: {
                 refreshToken,
                 revoked: false,
-                refreshTokenExpiresAt: { gt: new Date() },
+                refreshTokenExpiresAt: { gt: new Date() }
             },
+            include: {
+                usuarios_mobile: true
+            }
         });
 
-        if (!tokenInfo) {
+        if (!tokenInfo || !tokenInfo.usuarios_mobile) {
             return res.status(401).json({ message: 'Refresh token inválido ou expirado' });
         }
 
-        // Revogar tokens antigos
-        await prisma.tokenMobile.updateMany({
-            where: { usuarioId: tokenInfo.usuarioId },
+        await prisma.tokenMobile.update({
+            where: { id: tokenInfo.id },
             data: { revoked: true },
         });
 
@@ -176,17 +168,8 @@ export const refreshToken = async (req: Request, res: Response) => {
                 usuarioId: tokenInfo.usuarioId,
                 expiresAt: tokenExpiration,
                 refreshTokenExpiresAt: refreshTokenExpiration,
-                updatedAt: new Date(),
-            },
+            }
         });
-
-        const usuario = await prisma.usuarioMobile.findUnique({
-            where: { id: tokenInfo.usuarioId },
-        });
-
-        if (!usuario) {
-            return res.status(404).json({ message: 'Usuário não encontrado' });
-        }
 
         res.json({
             message: 'Token renovado com sucesso',
@@ -195,9 +178,10 @@ export const refreshToken = async (req: Request, res: Response) => {
             expiresAt: tokenExpiration,
             refreshTokenExpiresAt: refreshTokenExpiration,
             usuario: {
-                nome: usuario.nome,
-                matricula: usuario.matricula,
-            },
+                id: tokenInfo.usuarios_mobile.id,
+                nome: tokenInfo.usuarios_mobile.nome,
+                matricula: tokenInfo.usuarios_mobile.matricula,
+            }
         });
     } catch (error) {
         console.error('Erro ao renovar token:', error);
