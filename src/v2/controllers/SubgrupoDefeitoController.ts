@@ -1,19 +1,21 @@
 import { Request, Response } from 'express';
 
-export class SubgrupoDefeitoController {
-    public static async getSubgruposDefeito(req: Request, res: Response): Promise<void> {
+export class SubgruposV2Controller {
+    public static async getSubgrupos(_: Request, res: Response): Promise<void> {
         res.json([
             {
                 id: 1,
-                nome: 'Vazamento',
-                descricao: 'Vazamentos em componentes',
-                grupo_defeito_id: 1,
+                uuid: 'uuid-subgrupo-1',
+                nome: 'Isolamento',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
             },
             {
                 id: 2,
-                nome: 'Curto-circuito',
-                descricao: 'Problemas de curto-circuito',
-                grupo_defeito_id: 2,
+                uuid: 'uuid-subgrupo-2',
+                nome: 'Contato Elétrico',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
             },
         ]);
     }
