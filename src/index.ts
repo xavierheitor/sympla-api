@@ -4,10 +4,12 @@ import authRoutes from './routes/auth_routes/auth.routes';
 import { verificarToken } from './middlewares/auth.middleware';
 import appRoutes from './routes/app_routes/index.routes';
 import v2Routes from './routes/v2_mock_routes';
+import { loggerMiddleware } from './middlewares/logger.middleware';
 
 const app = express();
 
 app.use(express.json());
+app.use(loggerMiddleware); // ⬅️ Aqui
 
 // Rotas públicas
 app.use('/api/auth', authRoutes);

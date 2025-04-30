@@ -6,6 +6,7 @@ import { EquipamentosV2Controller } from '../v2/controllers/EquipamentoControlle
 import { GrupoDefeitoController } from '../v2/controllers/GrupoDefeitoController'
 import { SubgruposV2Controller } from '../v2/controllers/SubgrupoDefeitoController'
 import { AprV2Controller } from '../v2/controllers/AprController';
+import { TecnicosV2Controller } from '../v2/controllers/TecnicosController';
 
 
 const v2Routes = Router();
@@ -19,5 +20,7 @@ v2Routes.get('/subgrupos-defeito', SubgruposV2Controller.getSubgrupos);
 v2Routes.get('/aprs', AprV2Controller.getAprs);
 v2Routes.get('/apr-perguntas', AprV2Controller.getAprPerguntas);
 v2Routes.get('/apr-perguntas-relacionamentos', AprV2Controller.getAprPerguntasRelacionamentos);
+
+v2Routes.get('/tecnicos', TecnicosV2Controller.getTecnicos);
 
 export default v2Routes;
