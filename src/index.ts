@@ -1,5 +1,5 @@
 import express from 'express';
-import { prisma } from './prisma'; // ⬅️ Agora importa do lib
+import { prisma } from './prisma';
 import authRoutes from './routes/auth_routes/auth.routes';
 import { verificarToken } from './middlewares/auth.middleware';
 import appRoutes from './routes/app_routes/index.routes';
@@ -9,21 +9,39 @@ import { loggerMiddleware } from './middlewares/logger.middleware';
 const app = express();
 
 app.use(express.json());
-app.use(loggerMiddleware); // ⬅️ Aqui
+app.use(loggerMiddleware);
 
 // Rotas públicas
 app.use('/api/auth', authRoutes);
-
-// Middleware de autenticação para todas as rotas
-// app.use(verificarToken);
 
 // Rotas protegidas
 app.use('/api', appRoutes, verificarToken);
 app.use('/api/v2', v2Routes, verificarToken);
 
+// -------------------
+// MIDDLEWARES FINAIS
+// -------------------
+
+// 404: rota não encontrada
+app.use((req, res, next) => {
+    res.status(404).json({ error: 'Serviço não encontrado' });
+});
+
+// Tratamento global de erros
+app.use(
+    (
+        err: any,
+        req: express.Request,
+        res: express.Response,
+        next: express.NextFunction
+    ) => {
+        console.error('[ERRO INTERNO]', err);
+        res.status(500).json({ error: 'Erro interno no serviço' });
+    }
+);
+
 const PORT = process.env.PORT || 3000;
 
-// Desconectar o Prisma ao encerrar o servidor
 process.on('SIGINT', async () => {
     await prisma.$disconnect();
     process.exit(0);
