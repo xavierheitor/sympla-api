@@ -21,6 +21,27 @@ export class TipoAtividadeV2Controller {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             },
+
+            {
+                id: 3,
+                uuid: 'uuid-tipo-atividade-3',
+                nome: 'Teste Funcional',
+                tipoAtividadeMobile: 'prevBcBat',
+                aprId: 2,
+                checklistId: 2,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                id: 4,
+                uuid: 'uuid-tipo-atividade-4',
+                nome: 'Inspeção de Disjuntor',
+                tipoAtividadeMobile: 'prevDisjuntor',
+                aprId: 2,
+                checklistId: 2,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            },
         ]);
     }
 }

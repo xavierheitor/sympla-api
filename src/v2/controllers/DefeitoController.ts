@@ -72,6 +72,28 @@ export class DefeitoV2Controller {
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
             },
+            {
+                id: 7,
+                uuid: 'uuid-defeito-5',
+                grupo_id: 2,
+                subgrupo_id: 2,
+                codigo_sap: 'EL002',
+                descricao: 'Conexão solta em borne',
+                prioridade: 'P2',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            },
+            {
+                id: 8,
+                uuid: 'uuid-defeito-6',
+                grupo_id: 2,
+                subgrupo_id: 2,
+                codigo_sap: 'EL003',
+                descricao: 'Fuga de corrente em painel',
+                prioridade: 'A',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            },
         ]);
     }
 }
